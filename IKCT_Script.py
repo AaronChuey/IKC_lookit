@@ -40,15 +40,15 @@ for response_entry in data:
                 row = [
                     hashedId,
                     str(responseData['date_created']),
-                    str(int(childData['age_rounded']) / 365)[:1],
                     childData['age_rounded'],
                     childData['gender'],
                     childData['condition_list'],
-                    conditionData['parameterSet']['DV-VIDEO'],
                     "sneeze" if str(conditionData['parameterSet']['VIDEO']).find("sneeze") != -1 else "speech",
+                    conditionData['parameterSet']['VIDEO'],
+                    conditionData['parameterSet']['DV-VIDEO'],
                     "",
                     "",
-                response_entry['participant']['hashed_id'],
+                    response_entry['participant']['hashed_id'],
                     ""
                 ]
                 rows.append(row)
@@ -62,12 +62,12 @@ for response_entry in data:
 columns = [
     'child__hashed_id',
     'response__date_created',
-    'age_years',
-    'child__age_rounded',
+    'child__age_in_days',
     'child__gender',
     'child__condition_list',
-    'wub.order',
     'condition',
+    'video_watched',
+    'wub_order',
     'knowledge',
     'included',
     'parent__hashed_id',
@@ -77,27 +77,9 @@ columns = [
 # Create a DataFrame
 dfUnsorted = pd.DataFrame(rows, columns=columns)
 
-#----- add empty rows to spreadsheet if a given category (age and condition) isn't filled yet -----#
-ages = ["0", "1", "2"]
-conditions = ["speech", "sneeze"]
-target = 36
 
-# iterate through age/condition combinations
-for age in ages:
-    for condition in conditions:
-        age_category = dfUnsorted['age_years'] == age
-        condition_category = dfUnsorted['condition'] == condition
-        combined_category = age_category & condition_category
-        count = combined_category.sum()
-        # if there are not enough responses for this combination, pad spreadsheet with empty rows
-        if count < target:
-            row = ["", "~Place Holder", age, "", "", "", "", condition, "", "", "", ""]
-            rowsToAdd = [row] * (target - count)
-            dfAdd = pd.DataFrame(rowsToAdd, columns=columns)
-            dfUnsorted = pd.concat([dfAdd, dfUnsorted])
-        
-#----- sort by age, then speech/sneeze condition, then response data -----#
-df = dfUnsorted.sort_values(['age_years', 'condition', 'response__date_created'], ascending = [True, False, True])
+#----- sort by speech/sneeze condition, then response created date -----#
+df = dfUnsorted.sort_values(['condition', 'response__date_created'], ascending = [False, True])
 
 #----- Write DataFrame to an Excel file -----#
 output_file = '~/Desktop/IKCT datasheet.xlsx'
