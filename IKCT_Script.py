@@ -2,7 +2,7 @@ import pandas as pd
 import json
 
 #----- Load JSON data -----#
-with open('/Users/suzannahwistreich/Desktop/Which-wub-do-you-like-_all-responses-identifiable.json', 'r') as json_file:
+with open('/Users/suzannahwistreich/Downloads/Which-wub-do-you-like-_all-responses-identifiable.json', 'r') as json_file:
     data = json.load(json_file)
 
 # init spreadsheet rows
@@ -23,7 +23,7 @@ for response_entry in data:
     childData = response_entry['child']
     hashedId = childData['hashed_id']
 
-    # moves past pilot data
+    # moves past pilot data if > 0
     if participantCount > 0:
         # checks to make sure participant was not in pilot and does not already have an accepted response
         if (hashedId not in acceptedChildHashedIds) and (hashedId not in pilotHashedIds):
@@ -42,10 +42,10 @@ for response_entry in data:
                     str(responseData['date_created']),
                     childData['age_rounded'],
                     childData['gender'],
-                    childData['condition_list'],
-                    "sneeze" if str(conditionData['parameterSet']['VIDEO']).find("sneeze") != -1 else "speech",
+                    "prefail" if str(conditionData['parameterSet']['VIDEO']).find("prefail") != -1 else "postfail",
                     conditionData['parameterSet']['VIDEO'],
                     conditionData['parameterSet']['DV-VIDEO'],
+                    "sneeze" if str(conditionData['parameterSet']['VIDEO']).find("sneeze") != -1 else "speech",
                     "",
                     "",
                     response_entry['participant']['hashed_id'],
@@ -62,12 +62,12 @@ for response_entry in data:
 columns = [
     'child__hashed_id',
     'response__date_created',
-    'child__age_in_days',
+    'child__age_rounded',
     'child__gender',
-    'child__condition_list',
-    'condition',
+    'video_type',
     'video_watched',
     'wub_order',
+    'condition',
     'knowledge',
     'included',
     'parent__hashed_id',
@@ -76,9 +76,8 @@ columns = [
 
 # Create a DataFrame
 dfUnsorted = pd.DataFrame(rows, columns=columns)
-
-
-#----- sort by speech/sneeze condition, then response created date -----#
+        
+#----- sort by speech/sneeze condition, then response date -----#
 df = dfUnsorted.sort_values(['condition', 'response__date_created'], ascending = [False, True])
 
 #----- Write DataFrame to an Excel file -----#
